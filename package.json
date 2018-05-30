@@ -6,6 +6,10 @@
   "repository": "https://github.com/credit-coin/credit-coin-contracts.git",
   "author": "Credit Coin",
   "license": "MIT",
+  "scripts": {
+    "test": "truffle test",
+    "deploy": "truffle deploy"
+  },
   "dependencies": {
     "babel-register": "^6.26.0",
     "moment": "^2.22.1",
