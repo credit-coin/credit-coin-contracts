@@ -1,33 +1,78 @@
 pragma solidity ^0.4.23;
 
-contract Agreement {
+import './Escrow.sol';
+import './ContentUtils.sol';
+
+contract Agreement is Escrow {
     
-    struct Milestone {
-        uint target;
-    }
-
-    mapping(uint=>Milestone) milestones;
-    uint balance;
-    address brand;
-    address contentCreator;
-
-    constructor() public {
+    bool public locked;
+    uint  public createdOn;
+    uint public expiration;
+    address public brand;
+    address public creator;
+    
+    constructor(address _creator, uint _expiration) public {
         brand = msg.sender;
+        creator = _creator;
+        expiration = _expiration;
     }
 
     /// @notice only brand is authorized
-    modifier ownlyBrand(address sender) {
-        require(sender == brand);
+    modifier onlyBrand() {
+        require(msg.sender == brand);
         _;
     }
 
-    /// @notice only brand is authorized
-    modifier ownlyBrand(address sender) {
-        require(sender == brand);
+    /// @notice only creator is authorized
+    modifier onlyCreator() {
+        require(msg.sender == creator);
         _;
     }
 
-    function newMileStone(uint _target) ownlyBrand(msg.sender) uniqueMilestone(_target) public payable {
-        milestones[_target] = Milestone(_target);
-    } 
+    /// @notice deliverable fulfilled
+    modifier fulfilled(bytes32 _id) {
+        require(content.isFulfilled(_id, creator, brand));
+        _;
+    }
+
+    /// @notice agreement expired, refunds remaining balance in escrow
+    modifier expired() {
+        require(block.timestamp > expiration);
+        _;
+    }
+
+    /// @notice add content to the agreement
+    function addContent(string _name, 
+        string _description, 
+        uint _addedOn,
+        uint _reward) onlyBrand validReward(_reward) 
+        public payable returns(bool _success) {
+            return content.put(_name, _description, _addedOn, _reward);
+    }
+
+    function _fulfill(bytes32 _id) private returns (bool) {
+        bool _fulfilled = content.fulfill(_id, creator, brand);
+        if(_fulfilled) {
+            return completeDeliverable(_id);
+        }
+
+        return false;
+    }
+
+    function fulfillDeliverable(bytes32 _id) onlyCreator public returns (bool) {
+        return _fulfill(_id);
+    }
+
+    function approveDeliverable(bytes32 _id) onlyBrand public returns (bool) {
+        return _fulfill(_id);
+    }
+
+    function lock() onlyBrand public {
+        content.locked == true;
+        locked = true;
+    }
+
+    function destroy() onlyBrand expired public {
+        selfdestruct(msg.sender);
+    }
 }
