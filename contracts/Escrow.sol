@@ -7,7 +7,7 @@ contract Escrow {
     using SafeMath for uint256;
     using ContentUtils for ContentUtils.ContentMapping;
 
-    ContentUtils.ContentMapping content;
+    ContentUtils.ContentMapping public content;
     uint256 escrow = 0;
 
     /// @notice value sent with transaction covers reward
@@ -29,5 +29,28 @@ contract Escrow {
         msg.sender.transfer(_amount);
         escrow.sub(_amount);
         return true;
+    }
+
+    function getContentByName(string _name) public view returns(
+        string name,
+        string description,
+        uint reward,
+        uint addedOn) 
+    {
+        var (_content, exist) = content.getContentByName(_name);
+        if (exist) {
+            return (_content.name, _content.description, _content.deliverable.reward, _content.addedOn);
+        } else {
+            return ("", "", 0, 0);
+        }
+    }
+
+    function currentFulfillment(string _name) public view returns(bool fulfillment) {
+        var (_content, exist) = content.getContentByName(_name);
+        if (exist) {
+            return _content.deliverable.fulfillment[msg.sender];
+        } else {
+            false;
+        }
     }
 }

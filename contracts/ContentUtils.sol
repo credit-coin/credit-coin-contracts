@@ -54,7 +54,6 @@ library ContentUtils {
     function put(ContentMapping storage self, 
         string _name, 
         string _description, 
-        uint _addedOn,
         uint _reward) public returns (bool) 
     {
             require(!self.locked);
@@ -62,7 +61,7 @@ library ContentUtils {
             bytes32 _id = generateContentID(_name);
             require(self.data[_id].id == bytes32(0));
 
-            self.data[_id] = Content(_id, _name, _description, _addedOn, DeliverableUtils.newDeliverable(_reward));
+            self.data[_id] = Content(_id, _name, _description, block.timestamp, DeliverableUtils.newDeliverable(_reward));
             self.keys.push(_id);
             return true;
     }
@@ -85,7 +84,7 @@ library ContentUtils {
     /// @notice get content by plain string name
     function getContentByName(ContentMapping storage self, string _name) public view returns (Content storage _content, bool exists) {
         bytes32 _hash = generateContentID(_name);
-        return (self.data[_hash], self.data[_hash].id == bytes32(0));
+        return (self.data[_hash], self.data[_hash].addedOn != 0);
     }
 
     /// @notice get content by sha3 ID hash

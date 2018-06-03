@@ -44,15 +44,14 @@ contract Agreement is Escrow {
     /// @notice add content to the agreement
     function addContent(string _name, 
         string _description, 
-        uint _addedOn,
         uint _reward) onlyBrand validReward(_reward) 
         public payable returns(bool _success) {
-            return content.put(_name, _description, _addedOn, _reward);
+            return content.put(_name, _description, _reward);
     }
 
     function _fulfill(bytes32 _id) private returns (bool) {
         bool _fulfilled = content.fulfill(_id, creator, brand);
-        if(_fulfilled) {
+        if(_fulfilled && msg.sender == creator) {
             return completeDeliverable(_id);
         }
 
@@ -75,4 +74,6 @@ contract Agreement is Escrow {
     function destroy() onlyBrand expired public {
         selfdestruct(msg.sender);
     }
+
+    function deposit() payable {}
 }
