@@ -1,6 +1,7 @@
 pragma solidity ^0.4.23;
 
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+import 'tokencontract/contracts/CCOIN.sol';
 import './ContentUtils.sol';
 
 contract Escrow {
@@ -8,26 +9,49 @@ contract Escrow {
     using ContentUtils for ContentUtils.ContentMapping;
 
     ContentUtils.ContentMapping public content;
-    uint256 escrow = 0;
+    address escrowAddr = address(this);
+    address public tokenAddr;
+    CCOIN public creditCoin;
 
-    /// @notice value sent with transaction covers reward
+    uint256 public claimable = 0; 
+    uint256 public currentBalance = 0; 
+
+    constructor(address _token) {
+        tokenAddr = _token;
+        creditCoin = CCOIN(_token);
+    }
+
+    /// @notice valid reward and user has enough funds
     modifier validReward(uint256 _reward) {
-        require(msg.value > 0 && _reward > 0 && msg.value >= _reward);
-        escrow.add(msg.value);
+        require(_reward > 0 && _depositEscrow(_reward));
         _;
     }
 
     /// @notice complete deliverable by making reward amount claimable
-    function completeDeliverable(bytes32 _id) internal returns(bool) {
-        uint256 _reward = content.rewardOf(_id);
-        require(_reward >= escrow);
-        return withdraw(_reward);       
+    function completeDeliverable(bytes32 _id, address _creator, address _brand) internal returns(bool) {
+        require(content.isFulfilled(_id, _creator, _brand));
+        content.completeDeliverable(_id);
+        return _approveEscrow(content.rewardOf(_id));       
     }
 
     /// @notice withdraw an amount;
-    function withdraw(uint256 _amount) internal returns(bool) {
-        msg.sender.transfer(_amount);
-        escrow.sub(_amount);
+    function _withdraw(bytes32 _data) public payable returns(bool) {
+        require(currentBalance >= claimable && tokenAddr.call(_data));
+        currentBalance = creditCoin.balanceOf(this);
+        claimable = 0;
+        return true;
+    }
+
+    /// @notice update current balance, if proper token amount approved
+    function _depositEscrow(uint256 _amount) internal returns(bool) {
+        require(creditCoin.balanceOf(this) >= _amount.add(currentBalance));
+        currentBalance = currentBalance.add(_amount);
+        return true;
+    }
+
+    /// @notice approve reward amount for transfer from escrow contract to creator
+    function _approveEscrow(uint256 _amount) internal returns(bool) {
+        claimable = claimable.add(_amount);
         return true;
     }
 

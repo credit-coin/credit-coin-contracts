@@ -8,10 +8,11 @@ contract Agreement is Escrow {
     bool public locked;
     uint  public createdOn;
     uint public expiration;
+    uint public startTime;
     address public brand;
     address public creator;
     
-    constructor(address _creator, uint _expiration) public {
+    constructor(address _creator, uint _expiration, address _token) Escrow(_token) public {
         brand = msg.sender;
         creator = _creator;
         expiration = _expiration;
@@ -41,24 +42,36 @@ contract Agreement is Escrow {
         _;
     }
 
+    /// @notice agreement not expired, refunds remaining balance in escrow
+    modifier notExpired() {
+        require(block.timestamp < expiration);
+        _;
+    }
+
+    /// @notice agreement not locked
+    modifier notLocked() {
+        require(!locked);
+        _;
+    }
+
     /// @notice add content to the agreement
     function addContent(string _name, 
         string _description, 
-        uint _reward) onlyBrand validReward(_reward) 
-        public payable returns(bool _success) {
+        uint _reward) notLocked onlyBrand validReward(_reward) 
+        public returns(bool _success) {
             return content.put(_name, _description, _reward);
     }
 
     function _fulfill(bytes32 _id) private returns (bool) {
         bool _fulfilled = content.fulfill(_id, creator, brand);
-        if(_fulfilled && msg.sender == creator) {
-            return completeDeliverable(_id);
+        if(_fulfilled) {
+            return completeDeliverable(_id, creator, brand);
         }
 
         return false;
     }
 
-    function fulfillDeliverable(bytes32 _id) onlyCreator public returns (bool) {
+    function fulfillDeliverable(bytes32 _id) notExpired onlyCreator public returns (bool) {
         return _fulfill(_id);
     }
 
@@ -66,9 +79,22 @@ contract Agreement is Escrow {
         return _fulfill(_id);
     }
 
+    /// @notice release current claimable escrow an amount;
+    function withdraw(bytes32 _data) onlyCreator returns(bool) {
+        _withdraw(_data);
+        return true;
+    }
+
     function lock() onlyBrand public {
         content.locked == true;
         locked = true;
+        startTime = block.timestamp;
+    }
+
+    function extendExpiration(uint _expiration) onlyBrand public returns (bool) {
+        require(_expiration > expiration && _expiration >= block.timestamp);
+        expiration = _expiration;
+        return true;
     }
 
     function destroy() onlyBrand expired public {

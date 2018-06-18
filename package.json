@@ -15,6 +15,7 @@
     "babel-register": "^6.26.0",
     "moment": "^2.22.1",
     "openzeppelin-solidity": "^1.9.0",
+    "tokencontract": "https://github.com/credit-coin/tokencontract.git",
     "truffle": "^4.1.11",
     "truffle-artifactor": "^3.0.5",
     "web3": "^0.20.6"

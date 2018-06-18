@@ -7,6 +7,7 @@ library DeliverableUtils {
     struct Deliverable {
         uint256 reward;
         mapping(address=>bool) fulfillment;
+        bool fulfilled;
     }
 
     /// @notice msg.sender can be creator or brand and mark their delivery or approval, returns check if completely Fulfilled
@@ -24,7 +25,7 @@ library DeliverableUtils {
     /// @notice return new deliverable struct if reward greater than 0
     function newDeliverable(uint256 _reward) internal pure returns(Deliverable _deliverable) {
         require(_reward > 0);
-        return Deliverable(_reward);
+        return Deliverable(_reward, false);
     }
 }
 
@@ -106,6 +107,12 @@ library ContentUtils {
     /// @notice wrapper around internal deliverable method
     function isFulfilled(ContentMapping storage self, bytes32 _id, address _creator, address _brand) public view returns(bool) {
         return self.data[_id].deliverable.isFulfilled(_creator, _brand);
+    }
+
+    /// @notice marks deliverable as fulfilled
+    function completeDeliverable(ContentMapping storage self, bytes32 _id) internal returns(bool) {
+        self.data[_id].deliverable.fulfilled = true;
+        return true;
     }
 
     /// @notice get sha256 hash of name for content ID
