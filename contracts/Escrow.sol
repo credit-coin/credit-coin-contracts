@@ -15,6 +15,7 @@ contract Escrow {
 
     uint256 public claimable = 0; 
     uint256 public currentBalance = 0; 
+    mapping(bytes32 => uint256) claimableRewards;
 
     constructor(address _token) {
         tokenAddr = _token;
@@ -31,7 +32,7 @@ contract Escrow {
     function completeDeliverable(bytes32 _id, address _creator, address _brand) internal returns(bool) {
         require(content.isFulfilled(_id, _creator, _brand));
         content.completeDeliverable(_id);
-        return _approveEscrow(content.rewardOf(_id));       
+        return _approveEscrow(_id, content.rewardOf(_id));       
     }
 
     /// @notice update current balance, if proper token amount approved
@@ -42,8 +43,9 @@ contract Escrow {
     }
 
     /// @notice approve reward amount for transfer from escrow contract to creator
-    function _approveEscrow(uint256 _amount) internal returns(bool) {
+    function _approveEscrow(bytes32 _id, uint256 _amount) internal returns(bool) {
         claimable = claimable.add(_amount);
+        claimableRewards[_id] = _amount;
         return true;
     }
 

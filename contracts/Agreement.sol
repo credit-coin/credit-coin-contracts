@@ -78,6 +78,11 @@ contract Agreement is Escrow {
     function approveDeliverable(bytes32 _id) onlyBrand public returns (bool) {
         return _fulfill(_id);
     }
+    
+    function claim(bytes32 _id) external onlyCreator {
+        claimableRewards[_id] = 0;
+    }
+
 
     function lock() onlyBrand public {
         content.locked == true;
