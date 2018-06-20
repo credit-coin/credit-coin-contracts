@@ -1,7 +1,6 @@
 pragma solidity ^0.4.23;
 
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
-import 'tokencontract/contracts/CCOIN.sol';
 import './ContentUtils.sol';
 
 contract Escrow {
@@ -11,7 +10,6 @@ contract Escrow {
     ContentUtils.ContentMapping public content;
     address escrowAddr = address(this);
     address public tokenAddr;
-    CCOIN public creditCoin;
 
     uint256 public claimable = 0; 
     uint256 public currentBalance = 0; 
@@ -19,7 +17,6 @@ contract Escrow {
 
     constructor(address _token) {
         tokenAddr = _token;
-        creditCoin = CCOIN(_token);
     }
 
     /// @notice valid reward and user has enough funds
@@ -37,7 +34,6 @@ contract Escrow {
 
     /// @notice update current balance, if proper token amount approved
     function _depositEscrow(uint256 _amount) internal returns(bool) {
-        require(creditCoin.balanceOf(this) >= _amount.add(currentBalance));
         currentBalance = currentBalance.add(_amount);
         return true;
     }
