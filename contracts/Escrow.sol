@@ -34,14 +34,6 @@ contract Escrow {
         return _approveEscrow(content.rewardOf(_id));       
     }
 
-    /// @notice withdraw an amount;
-    function _withdraw(bytes32 _data) public payable returns(bool) {
-        require(currentBalance >= claimable && tokenAddr.call(_data));
-        currentBalance = creditCoin.balanceOf(this);
-        claimable = 0;
-        return true;
-    }
-
     /// @notice update current balance, if proper token amount approved
     function _depositEscrow(uint256 _amount) internal returns(bool) {
         require(creditCoin.balanceOf(this) >= _amount.add(currentBalance));

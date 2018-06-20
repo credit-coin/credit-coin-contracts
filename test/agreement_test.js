@@ -22,11 +22,11 @@ contract('AgreementTest', (accounts) => {
         agreement = await Agreement.new(creator, expiration, token.address, {from: brand});
     });
 
-    // it('should set correct initial values', async () => {
-    //     assert.equal(await agreement.brand(), brand);
-    //     assert.equal(await agreement.creator(), creator);
-    //     assert.equal(parseInt(await agreement.expiration()), expiration);
-    // })
+    it('should set correct initial values', async () => {
+        assert.equal(await agreement.brand(), brand);
+        assert.equal(await agreement.creator(), creator);
+        assert.equal(parseInt(await agreement.expiration()), expiration);
+    })
 
     it('should add new content', async () => {
         await token.transfer(agreement.address, testFixtures.newContent[2], {from: brand});
@@ -74,28 +74,6 @@ contract('AgreementTest', (accounts) => {
         const currentClaimable = await agreement.claimable();
         assert.equal(currentClaimable.toString(10), parseInt(agreementPrevClaimable.toString(10))+reward);
     });
-
-    it('should reward claimable escrow', async () => {
-        const reward = 2000,
-            name = "ClaimThis",
-            description = "will Be claimed";
-
-        const agreementPrevBal = await agreement.currentBalance();
-        await token.transfer(agreement.address, reward+parseInt(agreementPrevBal.toString(10)), {from: brand});
-        await agreement.addContent(name, description, reward, {from: brand});
-
-        const id = web3.sha3(name);
-        await agreement.fulfillDeliverable(id, {from: creator});
-        await agreement.approveDeliverable(id, {from: brand});
-
-        const prevClaimable = await agreement.claimable();
-        const prevBalance = await agreement.currentBalance();
-
-        const tokenABI = web3.eth.contract(abi).at(token.address);
-        const data = tokenABI.transfer.getData(prevClaimable, creator);
-        await agreement.withdraw(web3.sha3(data), {from: creator});
-    });
-
     it('should lock deliverable', async () => {
         await agreement.lock({from: brand});
         assert.equal( await agreement.locked(), true);

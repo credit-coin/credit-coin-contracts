@@ -79,12 +79,6 @@ contract Agreement is Escrow {
         return _fulfill(_id);
     }
 
-    /// @notice release current claimable escrow an amount;
-    function withdraw(bytes32 _data) onlyCreator returns(bool) {
-        _withdraw(_data);
-        return true;
-    }
-
     function lock() onlyBrand public {
         content.locked == true;
         locked = true;
