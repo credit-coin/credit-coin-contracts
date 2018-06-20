@@ -15,7 +15,7 @@ contract Escrow {
 
     uint256 public claimable = 0; 
     uint256 public currentBalance = 0; 
-    mapping(bytes32 => uint256) claimableRewards;
+    mapping(bytes32 => uint256) public claimableRewards;
 
     constructor(address _token) {
         tokenAddr = _token;
@@ -47,6 +47,10 @@ contract Escrow {
         claimable = claimable.add(_amount);
         claimableRewards[_id] = _amount;
         return true;
+    }
+
+    function getClaimableRewards(bytes32 _id) public returns(uint256) {
+        return claimableRewards[_id];
     }
 
     function getContentByName(string _name) public view returns(
