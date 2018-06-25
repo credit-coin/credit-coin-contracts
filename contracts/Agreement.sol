@@ -12,7 +12,7 @@ contract Agreement is Escrow {
     address public brand;
     address public creator;
     
-    constructor(address _creator, uint _expiration, address _token) Escrow(_token) public {
+    constructor(address _creator, uint _expiration, address _token) public {
         brand = msg.sender;
         creator = _creator;
         expiration = _expiration;

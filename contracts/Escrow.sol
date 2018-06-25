@@ -9,15 +9,10 @@ contract Escrow {
 
     ContentUtils.ContentMapping public content;
     address escrowAddr = address(this);
-    address public tokenAddr;
 
     uint256 public claimable = 0; 
     uint256 public currentBalance = 0; 
     mapping(bytes32 => uint256) public claimableRewards;
-
-    constructor(address _token) {
-        tokenAddr = _token;
-    }
 
     /// @notice valid reward and user has enough funds
     modifier validReward(uint256 _reward) {
