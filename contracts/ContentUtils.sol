@@ -35,10 +35,15 @@ library ContentUtils {
 
     struct Content {
         bytes32 id;
+        uint addedOn;
         string name;
         string description;
-        uint addedOn;
-        DeliverableUtils.Deliverable deliverable;
+        string _type;
+        string contentID;
+        string userID;
+        bool approved; 
+        bool requestEdit;
+        bool requestResubmission;
     }
 
     /// @notice utility for mapping bytes32=>Content. Keys must be unique. It can be updated until it is locked.
@@ -54,43 +59,59 @@ library ContentUtils {
     /// @notice put item into mapping
     function put(ContentMapping storage self, 
         string _name, 
-        string _description, 
-        uint _reward) public returns (bool) 
+        string _description,
+        string _type,
+        string _contentID,
+        string _userID) public returns (bool) 
     {
-            require(!self.locked);
-
-            bytes32 _id = generateContentID(_name);
+            bytes32 _id = generateContentID(_contentID);
             require(self.data[_id].id == bytes32(0));
-
-            self.data[_id] = Content(_id, _name, _description, block.timestamp, DeliverableUtils.newDeliverable(_reward));
+            self.data[_id] = Content(_id, block.timestamp, _name, _description, _type, _contentID, _userID, false, false, false);
             self.keys.push(_id);
             return true;
     }
     
+    function approve(ContentMapping storage self, bytes32 _contentID) internal returns(Content) {
+        self.data[_contentID].approved = true;
+        return self.data[_contentID];
+    }
+
+    function disApprove(ContentMapping storage self, bytes32 _contentID) internal returns(bool) {
+        self.data[_contentID].approved = false;
+        return true;
+    }
+
+    function requestEdit(ContentMapping storage self, bytes32 _contentID) internal returns(bool) {
+        self.data[_contentID].requestEdit = true;
+        self.data[_contentID].requestResubmission = false;
+        self.data[_contentID].approved = false;
+        return true;
+    }
+
+    function requestResubmission(ContentMapping storage self, bytes32 _contentID) internal returns(bool) {
+        self.data[_contentID].requestEdit = false;
+        self.data[_contentID].requestResubmission = true;
+        return true;
+    }
+
     /// @notice get amount of items in mapping
     function size(ContentMapping storage self) public view returns (uint) {
         return self.keys.length;
     }
 
-    /// @notice return reward of content delivarable
-    function rewardOf(ContentMapping storage self, bytes32 _id) public view returns (uint256) {
-        return self.data[_id].deliverable.reward;
-    }
+    // /// @notice return reward of content delivarable
+    // function rewardOf(ContentMapping storage self, bytes32 _id) public view returns (uint256) {
+    //     return self.data[_id].deliverable.reward;
+    // }
 
     function getKey(ContentMapping storage self, uint _index) public view returns (bytes32) {
         isValidIndex(_index, self.keys.length);
         return self.keys[_index];
     }
 
-    /// @notice get content by plain string name
-    function getContentByName(ContentMapping storage self, string _name) public view returns (Content storage _content, bool exists) {
-        bytes32 _hash = generateContentID(_name);
-        return (self.data[_hash], self.data[_hash].addedOn != 0);
-    }
-
     /// @notice get content by sha3 ID hash
-    function getContentByID(ContentMapping storage self, bytes32 _id) public view returns (Content storage _content, bool exists) {
-        return (self.data[_id], self.data[_id].id == bytes32(0));
+    function getContentByID(ContentMapping storage self, bytes32 _id) public view returns (Content storage _content) {
+        return self.data[_id];
     }
 
     /// @notice get content by _index into key array 
@@ -100,20 +121,20 @@ library ContentUtils {
     }
 
     /// @notice wrapper around internal deliverable method
-    function fulfill(ContentMapping storage self, bytes32 _id, address _creator, address _brand) public returns(bool) {
-        return self.data[_id].deliverable.fulfill(_creator, _brand);
-    }
+    // function fulfill(ContentMapping storage self, bytes32 _id, address _creator, address _brand) public returns(bool) {
+    //     return self.data[_id].deliverable.fulfill(_creator, _brand);
+    // }
 
-    /// @notice wrapper around internal deliverable method
-    function isFulfilled(ContentMapping storage self, bytes32 _id, address _creator, address _brand) public view returns(bool) {
-        return self.data[_id].deliverable.isFulfilled(_creator, _brand);
-    }
+    // /// @notice wrapper around internal deliverable method
+    // function isFulfilled(ContentMapping storage self, bytes32 _id, address _creator, address _brand) public view returns(bool) {
+    //     return self.data[_id].deliverable.isFulfilled(_creator, _brand);
+    // }
 
     /// @notice marks deliverable as fulfilled
-    function completeDeliverable(ContentMapping storage self, bytes32 _id) internal returns(bool) {
-        self.data[_id].deliverable.fulfilled = true;
-        return true;
-    }
+    // function completeDeliverable(ContentMapping storage self, bytes32 _id) internal returns(bool) {
+    //     self.data[_id].deliverable.fulfilled = true;
+    //     return true;
+    // }
 
     /// @notice get sha256 hash of name for content ID
     function generateContentID(string _name) public pure returns (bytes32) {

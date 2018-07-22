@@ -9,6 +9,5 @@ module.exports = async (deployer, network, accounts) => {
         const token = Token.deployed();
         await deployer.deploy(ContentUtils);
         await deployer.link(ContentUtils, [Agreement]);
-        await deployer.deploy(Agreement, accounts[1], moment().add(1, 'days').unix().valueOf(), token.address, {from: accounts[0]});
     });
 };
